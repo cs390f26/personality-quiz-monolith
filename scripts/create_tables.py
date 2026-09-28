@@ -28,7 +28,7 @@ CREATE TABLE personality_types (
 
 CREATE TABLE answers (
     answer_ID TINYINT PRIMARY KEY,
-    question_ID INT NOT NULL,
+    question_ID TINYINT NOT NULL,
     answer_text VARCHAR(255) NOT NULL,
     personality_ID TINYINT NOT NULL,
     CONSTRAINT fk_answers_question
@@ -40,7 +40,7 @@ CREATE TABLE answers (
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE quiz_results (
-    results_ID TINYINT PRIMARY KEY,
+    results_ID INT AUTO_INCREMENT PRIMARY KEY,
     personality_ID TINYINT NOT NULL,
     person_name VARCHAR(100) NOT NULL,
     completed_date DATE NOT NULL,
@@ -85,7 +85,9 @@ def main() -> None:
                 )
                 sys.exit(1)
 
-            cursor.execute(CREATE_TABLES_SQL)
+            for statement in CREATE_TABLES_SQL.split(";"):
+                if statement.strip():
+                    cursor.execute(statement)
 
         print("MySQL tables created successfully.")
     except Error as exc:
