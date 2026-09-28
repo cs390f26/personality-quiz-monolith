@@ -1,0 +1,313 @@
+* {
+	box-sizing: border-box;
+}
+
+body {
+	margin: 0;
+	font-family: Arial, sans-serif;
+	background-color: #f4f4f4;
+	color: #222222;
+}
+
+header {
+	background-color: #5eb3b3;
+	border-bottom: 1px solid #4ca3a3;
+	padding: 20px 40px;
+}
+
+header h1 {
+	margin: 0;
+	font-size: 1.5rem;
+	color: #ffffff;
+}
+
+main {
+	min-height: calc(100vh - 140px);
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	padding: 40px 20px;
+}
+
+.welcome-card {
+	width: 100%;
+	max-width: 700px;
+	background-color: #ffffff;
+	border: 1px solid #dddddd;
+	border-radius: 8px;
+	padding: 40px;
+	text-align: center;
+}
+
+.welcome-card h2 {
+	margin-top: 0;
+	font-size: 2rem;
+}
+
+.welcome-card p {
+	line-height: 1.6;
+	margin: 16px 0;
+}
+
+.quiz-details {
+	margin: 30px 0;
+	text-align: left;
+}
+
+.quiz-details h3 {
+	margin-bottom: 10px;
+}
+
+.quiz-details ul {
+	margin: 0;
+	padding-left: 22px;
+}
+
+.quiz-details li {
+	margin-bottom: 8px;
+}
+
+.start-button {
+	display: inline-block;
+	margin-top: 10px;
+	padding: 12px 24px;
+	border: none;
+	border-radius: 6px;
+	background-color: #5eb3b3;
+	color: #ffffff;
+	font-size: 1rem;
+	cursor: default;
+}
+
+footer {
+	text-align: center;
+	padding: 20px;
+	color: #666666;
+	font-size: 0.9rem;
+}
+
+main {
+	width: 100%;
+	max-width: 850px;
+	margin: 0 auto;
+	padding: 40px 20px;
+}
+
+.quiz-main {
+	display: block;
+	min-height: 0;
+}
+
+.quiz-heading {
+	margin-bottom: 30px;
+}
+
+.quiz-heading h2 {
+	margin-top: 0;
+	font-size: 2rem;
+}
+
+.quiz-heading p {
+	line-height: 1.6;
+}
+
+.name-section {
+	background-color: #ffffff;
+	border: 1px solid #dddddd;
+	border-radius: 8px;
+	padding: 24px;
+	margin-bottom: 24px;
+}
+
+.name-section label {
+	display: block;
+	font-weight: bold;
+	margin-bottom: 10px;
+}
+
+.name-section input {
+	width: 100%;
+	padding: 12px;
+	border: 1px solid #bbbbbb;
+	border-radius: 6px;
+	font-size: 1rem;
+}
+
+.question-card {
+	background-color: #ffffff;
+	border: 1px solid #dddddd;
+	border-radius: 8px;
+	padding: 24px;
+	margin-bottom: 20px;
+}
+
+.question-card h2 {
+	margin-top: 0;
+	margin-bottom: 20px;
+	font-size: 1.2rem;
+}
+
+.choices {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 12px;
+}
+
+.choice-button {
+	min-height: 55px;
+	padding: 12px;
+	border: 1px solid #999999;
+	border-radius: 6px;
+	background-color: #ffffff;
+	color: #222222;
+	font-size: 1rem;
+	cursor: default;
+}
+
+.submit-area {
+	text-align: center;
+	margin-top: 30px;
+}
+
+.submit-button {
+	padding: 14px 30px;
+	border: none;
+	border-radius: 6px;
+	background-color: #5eb3b3;
+	color: #ffffff;
+	font-size: 1rem;
+	cursor: default;
+}
+
+@media (max-width: 600px) {
+	header {
+		padding: 18px 20px;
+	}
+
+	.choices {
+		grid-template-columns: repeat(2, 1fr);
+	}
+}
+
+.results-main {
+	display: flex;
+	align-items: center;
+	justify-content: center;
+	min-height: calc(100vh - 140px);
+}
+
+.results-card {
+	width: 100%;
+	max-width: 700px;
+	background-color: #ffffff;
+	border: 1px solid #dddddd;
+	border-radius: 8px;
+	padding: 40px;
+	text-align: center;
+}
+
+.results-card h2 {
+	margin-top: 0;
+	margin-bottom: 16px;
+	font-size: 2rem;
+}
+
+.personality-result {
+	margin: 24px 0;
+	font-size: 2.2rem;
+	color: #5eb3b3;
+}
+
+.results-card p {
+	line-height: 1.6;
+	margin: 16px 0;
+}
+
+.stats-button {
+	display: inline-block;
+	margin-top: 20px;
+	padding: 12px 24px;
+	border: none;
+	border-radius: 6px;
+	background-color: #5eb3b3;
+	color: #ffffff;
+	font-size: 1rem;
+	cursor: default;
+}
+
+.statistics-main {
+	display: block;
+	width: 100%;
+	max-width: 900px;
+	margin: 0 auto;
+	padding: 40px 20px;
+}
+
+.statistics-heading {
+	text-align: center;
+	margin-bottom: 30px;
+}
+
+.statistics-heading h2 {
+	margin-top: 0;
+	font-size: 2rem;
+}
+
+.statistics-heading p {
+	line-height: 1.6;
+}
+
+.statistics-grid {
+	display: grid;
+	grid-template-columns: repeat(2, 1fr);
+	gap: 20px;
+}
+
+.stat-card {
+	background-color: #ffffff;
+	border: 1px solid #dddddd;
+	border-radius: 8px;
+	padding: 28px;
+	text-align: center;
+}
+
+.stat-card h3 {
+	margin-top: 0;
+	margin-bottom: 12px;
+	font-size: 1.5rem;
+}
+
+.stat-percentage {
+	margin: 0;
+	font-size: 2.4rem;
+	font-weight: bold;
+}
+
+.blue-stat {
+	border-top: 6px solid #4f86c6;
+}
+
+.green-stat {
+	border-top: 6px solid #5aa469;
+}
+
+.yellow-stat {
+	border-top: 6px solid #e0b84f;
+}
+
+.orange-stat {
+	border-top: 6px solid #e58b45;
+}
+
+.statistics-note {
+	margin-top: 30px;
+	text-align: center;
+	color: #666666;
+}
+
+@media (max-width: 600px) {
+	.statistics-grid {
+		grid-template-columns: 1fr;
+	}
+}
+
