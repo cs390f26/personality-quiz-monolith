@@ -2,7 +2,7 @@
 -- personality_types
 -- -----------------------------------------------------
 
-INSERT INTO personality_types
+INSERT IGNORE INTO personality_types
     (personality_ID, personality_type, description)
 VALUES
     (1, 'Orange', 'Energetic, spontaneous, and action-oriented'),
@@ -15,7 +15,7 @@ VALUES
 -- questions
 -- -----------------------------------------------------
 
-INSERT INTO questions
+INSERT IGNORE INTO questions
     (question_ID, question_text)
 VALUES
     (1, 'Which activity sounds most appealing?'),
@@ -29,7 +29,7 @@ VALUES
 -- answers
 -- -----------------------------------------------------
 
-INSERT INTO answers
+INSERT IGNORE INTO answers
     (answer_ID, question_ID, answer_text, personality_ID)
 VALUES
     (1, 1, 'Trying something exciting and spontaneous', 1),
@@ -62,7 +62,7 @@ VALUES
 -- quiz_results
 -- -----------------------------------------------------
 
-INSERT INTO quiz_results
+INSERT IGNORE INTO quiz_results
     (results_ID, personality_ID, person_name, completed_date)
 VALUES
     (1, 3, 'Jenny', '2026-09-14'),
