@@ -2,5 +2,6 @@ flask
 gunicorn
 mysql-connector-python
 pytest
+pytest-cov
 python-dotenv
 setuptools
