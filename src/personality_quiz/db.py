@@ -21,30 +21,76 @@ def get_connection():
 
 def ping() -> None:
     """Check that MySQL can be reached."""
-    connection = get_connection()
+    connection = None
     try:
+        connection = get_connection()
         connection.ping(reconnect=True, attempts=3, delay=5)
-    except mysql.connector.Error:
-        raise DatabaseUnavailableError("Cannot reach the MySQL database.")
+    except mysql.connector.Error as exc:
+        raise DatabaseUnavailableError("Cannot reach the MySQL database.") from exc
     finally:
-        connection.close()
+        if connection is not None:
+            connection.close()
 
 
 def get_questions():
     """Return all quiz questions."""
-    pass
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            "SELECT question_ID, question_text FROM questions ORDER BY question_ID"
+        )
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        connection.close()
 
 
 def get_answers(question_id):
     """Return the answer choices for one question."""
-    pass
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            "SELECT answer_ID, question_ID, answer_text, personality_ID "
+            "FROM answers WHERE question_ID = %s ORDER BY answer_ID",
+            (question_id,),
+        )
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        connection.close()
 
 
 def save_result(person_id, personality_type_id):
     """Store a completed quiz result."""
-    pass
+    connection = get_connection()
+    cursor = connection.cursor()
+    try:
+        cursor.execute(
+            "INSERT INTO quiz_results (personality_ID, person_name, completed_date) "
+            "VALUES (%s, %s, CURDATE())",
+            (personality_type_id, person_id),
+        )
+        connection.commit()
+    finally:
+        cursor.close()
+        connection.close()
 
 
 def get_statistics():
     """Return aggregate personality quiz statistics."""
-    pass
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            "SELECT pt.personality_type, COUNT(*) AS result_count "
+            "FROM quiz_results qr "
+            "JOIN personality_types pt ON pt.personality_ID = qr.personality_ID "
+            "GROUP BY pt.personality_ID, pt.personality_type "
+            "ORDER BY pt.personality_ID"
+        )
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        connection.close()
