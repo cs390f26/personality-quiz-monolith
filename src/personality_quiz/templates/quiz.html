@@ -27,7 +27,7 @@
             </div>
             <div class="stat-card">
                 <span class="stat-label">Questions</span>
-                <strong>5</strong>
+                <strong id="question-count">Loading...</strong>
             </div>
             <div class="stat-card">
                 <span class="stat-label">Results</span>
@@ -47,75 +47,241 @@
 
         <section class="name-section">
             <label for="name">Name</label>
-            <input type="text" id="name" name="name" placeholder="Enter your name">
+            <input type="text" id="name" name="name" placeholder="Enter your name" maxlength="100" autocomplete="name" required>
         </section>
-            <section class="question-card">
-                <h2>Question 1</h2>
-                <p>Which activity sounds most appealing?</p>
-
-                <div class="choices">
-                    <button type="button" class="choice-button">Trying something exciting and spontaneous</button>
-                    <button type="button" class="choice-button">Planning and completing an organized project</button>
-                    <button type="button" class="choice-button">Learning how something complex works</button>
-                    <button type="button" class="choice-button">Spending meaningful time with other people</button>
-                </div>
-            </section>
-
-            <section class="question-card">
-                <h2>Question 2</h2>
-                <p>How do you usually approach a new problem?</p>
-
-                <div class="choices">
-                    <button type="button" class="choice-button">Jump in and adjust as I go</button>
-                    <button type="button" class="choice-button">Make a clear step-by-step plan</button>
-                    <button type="button" class="choice-button">Analyze the problem before acting</button>
-                    <button type="button" class="choice-button">Talk it through with others</button>
-                </div>
-            </section>
-
-            <section class="question-card">
-                <h2>Question 3</h2>
-                <p>What do you value most when working in a group?</p>
-
-                <div class="choices">
-                    <button type="button" class="choice-button">Energy and flexibility</button>
-                    <button type="button" class="choice-button">Organization and responsibility</button>
-                    <button type="button" class="choice-button">Logic and strong ideas</button>
-                    <button type="button" class="choice-button">Cooperation and understanding</button>
-                </div>
-            </section>
-
-            <section class="question-card">
-                <h2>Question 4</h2>
-                <p>Which environment do you prefer?</p>
-
-                <div class="choices">
-                    <button type="button" class="choice-button">A fast-paced environment with variety</button>
-                    <button type="button" class="choice-button">A predictable environment with clear expectations</button>
-                    <button type="button" class="choice-button">A quiet environment where I can focus</button>
-                    <button type="button" class="choice-button">A friendly environment with lots of interaction</button>
-                </div>
-            </section>
-
-            <section class="question-card">
-                <h2>Question 5</h2>
-                <p>What best describes how you make decisions?</p>
-
-                <div class="choices">
-                    <button type="button" class="choice-button">I decide quickly and trust my instincts</button>
-                    <button type="button" class="choice-button">I follow rules and proven methods</button>
-                    <button type="button" class="choice-button">I compare facts and possibilities</button>
-                    <button type="button" class="choice-button">I consider how the decision affects people</button>
-                </div>
-            </section>
+        <div class="question-list" aria-live="polite">
+            <p>Loading quiz questions...</p>
+        </div>
 
         <div class="submit-area">
-            <button type="button" class="submit-button">Submit Quiz</button>
+            <button type="button" class="submit-button" disabled>Loading Questions...</button>
+            <p class="quiz-error" role="alert" hidden></p>
         </div>
     </main>
 
     <footer>
         Personality Quiz Project
     </footer>
+
+    <script>
+        const nameInput = document.querySelector("#name");
+        const questionList = document.querySelector(".question-list");
+        const submitButton = document.querySelector(".submit-button");
+        const quizError = document.querySelector(".quiz-error");
+        const questionCount = document.querySelector("#question-count");
+        const selectedAnswers = new Map();
+        let questions = [];
+
+        async function requestJson(url, options) {
+            let response;
+            try {
+                response = await fetch(url, options);
+            } catch {
+                throw new Error("Could not connect to the quiz service. Check your connection and try again.");
+            }
+
+            let data;
+            try {
+                data = await response.json();
+            } catch {
+                throw new Error(`The server returned an invalid response (${response.status}).`);
+            }
+
+            if (!response.ok) {
+                if (response.status === 503 || data?.status === "unavailable") {
+                    throw new Error("The quiz service cannot reach its database. Check that MySQL is running and the database settings are correct, then try again.");
+                }
+                throw new Error(data?.error?.message || `Request failed (${response.status}).`);
+            }
+            return data;
+        }
+
+        function validateQuestions(data) {
+            if (!data || !Array.isArray(data.questions) || data.questions.length === 0) {
+                throw new Error("No quiz questions are available right now.");
+            }
+
+            const questionIds = new Set();
+            for (const question of data.questions) {
+                if (
+                    !Number.isInteger(question.questionId) ||
+                    question.questionId < 1 ||
+                    typeof question.questionText !== "string" ||
+                    !question.questionText.trim() ||
+                    !Array.isArray(question.answers) ||
+                    question.answers.length === 0 ||
+                    questionIds.has(question.questionId)
+                ) {
+                    throw new Error("The server returned invalid quiz questions.");
+                }
+
+                questionIds.add(question.questionId);
+                const answerIds = new Set();
+                for (const answer of question.answers) {
+                    if (
+                        !Number.isInteger(answer.answerId) ||
+                        answer.answerId < 1 ||
+                        typeof answer.answerText !== "string" ||
+                        !answer.answerText.trim() ||
+                        answerIds.has(answer.answerId)
+                    ) {
+                        throw new Error("The server returned invalid answer choices.");
+                    }
+                    answerIds.add(answer.answerId);
+                }
+            }
+            return data.questions;
+        }
+
+        function renderQuestions() {
+            const fragment = document.createDocumentFragment();
+            questions.forEach((question, index) => {
+                const card = document.createElement("section");
+                card.className = "question-card";
+                card.dataset.questionId = question.questionId;
+
+                const heading = document.createElement("h2");
+                heading.textContent = `Question ${index + 1}`;
+                card.append(heading);
+
+                const prompt = document.createElement("p");
+                prompt.textContent = question.questionText;
+                card.append(prompt);
+
+                const choices = document.createElement("div");
+                choices.className = "choices";
+                for (const answer of question.answers) {
+                    const button = document.createElement("button");
+                    button.type = "button";
+                    button.className = "choice-button";
+                    button.dataset.answerId = answer.answerId;
+                    button.setAttribute("aria-pressed", "false");
+                    button.textContent = answer.answerText;
+                    choices.append(button);
+                }
+                card.append(choices);
+                fragment.append(card);
+            });
+            questionList.replaceChildren(fragment);
+            questionCount.textContent = String(questions.length);
+        }
+
+        async function loadQuestions() {
+            submitButton.disabled = true;
+            submitButton.textContent = "Loading Questions...";
+            quizError.hidden = true;
+            questionList.replaceChildren(document.createTextNode("Loading quiz questions..."));
+
+            try {
+                questions = validateQuestions(await requestJson("/questions"));
+                selectedAnswers.clear();
+                renderQuestions();
+                submitButton.disabled = false;
+                submitButton.textContent = "Submit Quiz";
+            } catch (error) {
+                questionList.replaceChildren();
+                quizError.textContent = error instanceof Error
+                    ? error.message
+                    : "Unable to load quiz questions. Please try again.";
+                quizError.hidden = false;
+                submitButton.disabled = false;
+                submitButton.textContent = "Retry Loading Questions";
+            }
+        }
+
+        questionList.addEventListener("click", (event) => {
+            if (!(event.target instanceof Element)) {
+                return;
+            }
+            const button = event.target.closest(".choice-button");
+            if (!button) {
+                return;
+            }
+
+            const card = button.closest(".question-card");
+            const questionId = Number(card.dataset.questionId);
+            const answerId = Number(button.dataset.answerId);
+            selectedAnswers.set(questionId, answerId);
+            for (const choice of card.querySelectorAll(".choice-button")) {
+                choice.setAttribute("aria-pressed", String(choice === button));
+            }
+            quizError.hidden = true;
+        });
+
+        nameInput.addEventListener("input", () => {
+            if (nameInput.value.trim()) {
+                quizError.hidden = true;
+            }
+        });
+
+        submitButton.addEventListener("click", async () => {
+            if (questions.length === 0) {
+                await loadQuestions();
+                return;
+            }
+
+            const personName = nameInput.value.trim();
+            if (!personName) {
+                quizError.textContent = "Enter your name before submitting.";
+                quizError.hidden = false;
+                nameInput.focus();
+                return;
+            }
+            if (personName.length > 100) {
+                quizError.textContent = "Your name must be 100 characters or fewer.";
+                quizError.hidden = false;
+                nameInput.focus();
+                return;
+            }
+            if (selectedAnswers.size !== questions.length) {
+                quizError.textContent = "Please select one answer for every question.";
+                quizError.hidden = false;
+                const unanswered = questions.find((question) => !selectedAnswers.has(question.questionId));
+                questionList.querySelector(
+                    `.question-card[data-question-id="${unanswered.questionId}"]`
+                ).scrollIntoView({ behavior: "smooth", block: "center" });
+                return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.textContent = "Submitting...";
+            nameInput.disabled = true;
+            questionList.querySelectorAll(".choice-button").forEach((button) => {
+                button.disabled = true;
+            });
+            quizError.hidden = true;
+
+            try {
+                const result = await requestJson("/quiz-results", {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                        personName,
+                        selectedAnswers: questions.map((question) => ({
+                            questionId: question.questionId,
+                            answerId: selectedAnswers.get(question.questionId),
+                        })),
+                    }),
+                });
+                if (!result || !Number.isInteger(result.resultId) || result.resultId < 1) {
+                    throw new Error("The server did not return a valid quiz result.");
+                }
+                window.location.assign(`/results?resultId=${encodeURIComponent(result.resultId)}`);
+            } catch (error) {
+                quizError.textContent = error instanceof Error
+                    ? error.message
+                    : "Unable to submit your quiz. Please try again.";
+                quizError.hidden = false;
+                submitButton.disabled = false;
+                submitButton.textContent = "Submit Quiz";
+                nameInput.disabled = false;
+                questionList.querySelectorAll(".choice-button").forEach((button) => {
+                    button.disabled = false;
+                });
+            }
+        });
+
+        loadQuestions();
+    </script>
 </body>
 </html>

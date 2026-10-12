@@ -28,7 +28,7 @@
                 <span class="color-orange">Orange</span>
             </p>
 
-            <img src="./assets/True_Colors_Logo.webp" alt="True Colors logo" class="logo-image" />
+            <img src="{{ url_for('static', filename='assets/True_Colors_Logo.webp') }}" alt="True Colors logo" class="logo-image" />
 
             <div class="quiz-details">
                 <h3>How it works</h3>
@@ -40,36 +40,50 @@
                 </ul>
             </div>
 
-            <button class="start-button" type="button">Start Quiz</button>
+            <a class="start-button" href="{{ url_for('quiz_page') }}">Start Quiz</a>
         </section>
 
         <section class="history-card" aria-label="Quiz history reel">
-            <h2>Recent Personalities</h2>
-
-            <div class="history-list">
-                <div class="history-item">
-                    <span class="history-name">Jane Doe</span>
-                    <span class="history-result">got <span class="color-blue">Blue</span>!</span>
-                    <span class="history-date">Sept 28, 2026</span>
-                </div>
-                <div class="history-item">
-                    <span class="history-name">John Smith</span>
-                    <span class="history-result">got <span class="color-gold">Gold</span>!</span>
-                    <span class="history-date">Sept 26, 2026</span>
-                </div>
-                <div class="history-item">
-                    <span class="history-name">Avery Lee</span>
-                    <span class="history-result">got <span class="color-orange">Orange</span>!</span>
-                    <span class="history-date">Sept 21, 2026</span>
-                </div>
-            </div>
-
-            <p class="history-note">This list will be populated from the database once the quiz history feature is connected.</p>
+            <h2>Quiz Activity</h2>
+            <p class="history-note" aria-live="polite">Loading quiz activity...</p>
         </section>
     </main>
 
     <footer>
         Personality Quiz Project
     </footer>
+
+    <script>
+        const activityNote = document.querySelector(".history-note");
+
+        async function getJson(url) {
+            const response = await fetch(url);
+            let data;
+            try {
+                data = await response.json();
+            } catch {
+                throw new Error(`The server returned an invalid response (${response.status}).`);
+            }
+
+            if (!response.ok) {
+                throw new Error(data?.error?.message || `Request failed (${response.status}).`);
+            }
+            return data;
+        }
+
+        getJson("/statistics")
+            .then((data) => {
+                if (!Number.isInteger(data.totalCompleted) || data.totalCompleted < 0) {
+                    throw new Error("The server returned invalid quiz statistics.");
+                }
+                const attempts = data.totalCompleted;
+                activityNote.textContent = `${attempts} quiz ${attempts === 1 ? "attempt" : "attempts"} completed. Individual recent results are not available yet.`;
+            })
+            .catch((error) => {
+                activityNote.textContent = error instanceof Error
+                    ? `Quiz activity could not be loaded: ${error.message}`
+                    : "Quiz activity could not be loaded. Please try again later.";
+            });
+    </script>
 </body>
 </html>

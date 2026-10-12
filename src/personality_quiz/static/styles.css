@@ -179,7 +179,18 @@ main {
 	background-color: #5eb3b3;
 	color: #ffffff;
 	font-size: 1rem;
-	cursor: default;
+	cursor: pointer;
+	text-decoration: none;
+}
+
+.start-button:disabled {
+	cursor: wait;
+	opacity: 0.7;
+}
+
+.quiz-error {
+	color: #a12622;
+	font-weight: 600;
 }
 
 .history-card {
@@ -587,7 +598,7 @@ main {
 	font-size: 0.98rem;
 	font-weight: 500;
 	text-align: left;
-	cursor: default;
+	cursor: pointer;
 	transition: all 0.2s ease;
 	box-shadow: 0 2px 8px rgba(15, 23, 42, 0.03);
 }
@@ -622,6 +633,21 @@ main {
 	background: radial-gradient(circle, #5eb3b3 0%, #5eb3b3 40%, #ffffff 41%, #ffffff 100%);
 }
 
+.choice-button[aria-pressed="true"] {
+	border-color: #5eb3b3;
+	background: linear-gradient(180deg, #f1fbfb 0%, #e9f6f6 100%);
+}
+
+.choice-button[aria-pressed="true"]::before {
+	border-color: #5eb3b3;
+	background: radial-gradient(circle, #5eb3b3 0%, #5eb3b3 40%, #ffffff 41%, #ffffff 100%);
+}
+
+.choice-button:disabled {
+	cursor: wait;
+	opacity: 0.7;
+}
+
 .submit-area {
 	text-align: center;
 	margin-top: 30px;
@@ -636,8 +662,13 @@ main {
 	font-size: 1rem;
 	font-weight: 700;
 	letter-spacing: 0.02em;
-	cursor: default;
+	cursor: pointer;
 	box-shadow: 0 10px 24px rgba(74, 156, 165, 0.25);
+}
+
+.submit-button:disabled {
+	cursor: wait;
+	opacity: 0.7;
 }
 
 @media (max-width: 640px) {
@@ -839,4 +870,3 @@ main {
 		grid-template-columns: 1fr;
 	}
 }
-
