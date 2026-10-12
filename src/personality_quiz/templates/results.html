@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Quiz Results</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='styles.css') }}">
 </head>
 
 <body>
@@ -16,7 +16,7 @@
         <section class="results-card">
             <div class="result-badge">Your Result</div>
 
-            <h2>You are a <span class="result-type color-blue">Blue</span>!</h2>
+            <h2>Congratulations, person_name!<br />You got:</span></h2>
 
             <div class="result-panel">
                 <p class="result-label">Personality Type</p>
@@ -30,6 +30,32 @@
             <div class="result-actions">
                 <button type="button" class="stats-button">View Overall Statistics</button>
                 <button type="button" class="secondary-button">Retake Quiz</button>
+            </div>
+
+            <div class="answers-review" aria-label="Answer review">
+                <h3>Your Breakdown</h3>
+                <ul class="response-list">
+                    <li class="response-item">
+                        <span class="response-question">Which activity sounds most appealing?</span>
+                        <span class="response-answer">Trying something exciting and spontaneous</span>
+                    </li>
+                    <li class="response-item">
+                        <span class="response-question">How do you usually approach a new problem?</span>
+                        <span class="response-answer">Talk it through with others</span>
+                    </li>
+                    <li class="response-item">
+                        <span class="response-question">What do you value most when working in a group?</span>
+                        <span class="response-answer">Cooperation and understanding</span>
+                    </li>
+                    <li class="response-item">
+                        <span class="response-question">Which environment do you prefer?</span>
+                        <span class="response-answer">A friendly environment with lots of interaction</span>
+                    </li>
+                    <li class="response-item">
+                        <span class="response-question">What best describes how you make decisions?</span>
+                        <span class="response-answer">I consider how the decision affects people</span>
+                    </li>
+                </ul>
             </div>
         </section>
     </main>
