@@ -4,6 +4,7 @@ import mysql.connector
 import pytest
 
 from personality_quiz import db
+from scripts.create_tables import _migrate_legacy_ties
 
 
 @pytest.fixture
@@ -226,3 +227,28 @@ def test_get_statistics_returns_aggregate_rows(database_connection):
     assert "personality_types" in query
     cursor.close.assert_called_once_with()
     connection.close.assert_called_once_with()
+
+
+def test_migrate_legacy_ties_copies_additional_winners_when_legacy_table_exists():
+    cursor = Mock()
+    cursor.fetchone.return_value = (1,)
+
+    _migrate_legacy_ties(cursor)
+
+    assert cursor.execute.call_count == 2
+    existence_query, parameters = cursor.execute.call_args_list[0].args
+    assert "information_schema.tables" in existence_query.lower()
+    assert parameters == ("quiz_result_personalities",)
+    migration_query = cursor.execute.call_args_list[1].args[0].lower()
+    assert "insert ignore into quiz_result_ties" in migration_query
+    assert "quiz_result_personalities" in migration_query
+    assert "legacy.personality_id <> saved.personality_id" in migration_query
+
+
+def test_migrate_legacy_ties_skips_migration_when_legacy_table_is_missing():
+    cursor = Mock()
+    cursor.fetchone.return_value = (0,)
+
+    _migrate_legacy_ties(cursor)
+
+    cursor.execute.assert_called_once()

@@ -129,17 +129,7 @@ It should confirm success with `MySQL tables are ready.`
 
 This uses the application account and creates any missing quiz tables: `questions`, `personality_types`, `answers`, `quiz_results`, `quiz_result_ties`, and `quiz_result_answers`. Foreign keys connect answers to questions and personality types, results to personality types, and each saved answer to its result attempt. Each completed attempt has one row in `quiz_results`; additional winning categories for a tie and the selected question answers are stored in related tables and saved in the same transaction. Existing tables and results are left in place.
 
-The script is safe to rerun and can fill in tables missing from a partially initialized database, including `quiz_result_answers` for answer breakdowns. It does not alter the columns of existing tables.
-
-### Add tie support to an existing database
-
-If you already created the original four tables, add the new table without deleting questions or saved results. When prompted, enter the application password:
-
-```bash
-mysql -h 127.0.0.1 -P 3306 -u quiz_app -p personality_quiz < scripts/add_tie_support.sql
-```
-
-This migration can be run again safely. Fresh databases created with the updated table script already include it. If the legacy `quiz_result_personalities` table exists, the script copies only additional winners into the new table. Single-category results keep their original format; tied API results return `personalities` and `isTie: true`. Statistics credit each winning category and count the attempt once in `totalCompleted`, so category percentages can sum above 100% when ties exist.
+The script is safe to rerun and can fill in tables missing from a partially initialized database, including `quiz_result_answers` for answer breakdowns. It does not alter the columns of existing tables. If the legacy `quiz_result_personalities` table exists, it also copies additional winners into `quiz_result_ties` without deleting existing data; single-category results keep their original format. Tied API results return `personalities` and `isTie: true`. Statistics credit each winning category and count the attempt once in `totalCompleted`, so category percentages can sum above 100% when ties exist.
 
 ### Initialize or repair quiz content
 
@@ -150,7 +140,7 @@ PYTHONPATH=src python scripts/create_tables.py
 mysql -h 127.0.0.1 -P 3306 -u quiz_app -p personality_quiz < data/sample-data.sql
 ```
 
-This keeps existing quiz results and legacy result-personality links; no separate legacy upgrade script is needed.
+This keeps existing quiz results and migrates any legacy result-personality links during table setup; no separate legacy upgrade script is needed.
 
 ### Reset the local quiz tables when needed
 
