@@ -8,7 +8,7 @@ The repository URL in `deploy/userdata.sh` is set to `https://github.com/cs390f2
 
 ## Deploy Process
 
-The deployment steps are:
+The `deploy/userdata.sh` file is a script that performs initial setup. The steps it executes are as follows:
 
 * Install Git and Python 3.12
 * Clone the repository
@@ -17,21 +17,12 @@ The deployment steps are:
 * Start MySQL, create the tables, and load the sample data
 * Install and launch the `personality_quiz` systemd service
 
-The `deploy/userdata.sh` script is intended to perform the initial setup. The service file also needs its `Type` and Gunicorn application target corrected before it can run.
+As you launch the EC2 instance:
 
-In the EC2 launch dialog:
-
-* Select an Amazon Linux instance with Python 3.12 available.
-* Enable HTTP and SSH in the security group. Restrict SSH to trusted addresses.
+* Title it `Personality Quiz App` (optional), leave the default Amazon Linux kernel and t3.micro Instance type selected.
+* Under key pair, select `vockey`
+* Enable HTTP and SSH in the security group.
 * Paste the completed `deploy/userdata.sh` into **Advanced details → User data**.
-
-## Debugging
-
-Cloud-init writes user-data output to `/var/log/cloud-init-output.log`. SSH to the instance and inspect this file if setup fails:
-
-```bash
-sudo tail -n 200 /var/log/cloud-init-output.log
-```
 
 ## Other Useful Commands on the EC2 Instance
 
