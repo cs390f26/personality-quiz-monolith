@@ -38,3 +38,4 @@ def test_seed_sample_data_rejects_missing_tables():
     connection.rollback.assert_called_once_with()
     connection.commit.assert_not_called()
     cursor.close.assert_called_once_with()
+
