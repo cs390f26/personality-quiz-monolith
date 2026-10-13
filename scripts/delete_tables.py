@@ -7,10 +7,16 @@ from personality_quiz.settings import ensure_settings
 from scripts.create_tables import _tables_exist
 
 REQUIRED_TABLES = (
-    "questions", "personality_types", "answers", "quiz_results", "quiz_result_ties"
+    "questions",
+    "personality_types",
+    "answers",
+    "quiz_results",
+    "quiz_result_ties",
+    "quiz_result_answers",
 )
 
 DELETE_TABLES_SQL = """
+DROP TABLE IF EXISTS quiz_result_answers;
 DROP TABLE IF EXISTS quiz_result_ties;
 DROP TABLE IF EXISTS quiz_results;
 DROP TABLE IF EXISTS answers;

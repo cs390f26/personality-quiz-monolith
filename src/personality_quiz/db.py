@@ -62,8 +62,14 @@ def get_answers(question_id):
         connection.close()
 
 
-def save_result(person_name, personality_type_id, *, tied_personality_ids=()):
-    """Save one completed attempt and its additional tied winners atomically.
+def save_result(
+    person_name,
+    personality_type_id,
+    *,
+    tied_personality_ids=(),
+    selected_answers=(),
+):
+    """Save one completed attempt, its answers, and any tied winners atomically.
 
     The original personality_ID column keeps the first winner so existing
     single-category results and sample data remain valid.
@@ -82,6 +88,12 @@ def save_result(person_name, personality_type_id, *, tied_personality_ids=()):
                 "INSERT INTO quiz_result_ties (results_ID, personality_ID) "
                 "VALUES (%s, %s)",
                 (result_id, tied_id),
+            )
+        for question_id, answer_id in selected_answers:
+            cursor.execute(
+                "INSERT INTO quiz_result_answers "
+                "(results_ID, question_ID, answer_ID) VALUES (%s, %s, %s)",
+                (result_id, question_id, answer_id),
             )
         connection.commit()
         return result_id
@@ -116,6 +128,29 @@ def get_result(result_id):
         )
         result["personalities"] = cursor.fetchall()
         return result
+    finally:
+        cursor.close()
+        connection.close()
+
+
+def get_result_answers(result_id):
+    """Return an attempt's selected question and answer text, or None if absent."""
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True, buffered=True)
+    try:
+        cursor.execute(
+            "SELECT q.question_ID, q.question_text, a.answer_ID, a.answer_text "
+            "FROM quiz_results r "
+            "LEFT JOIN quiz_result_answers ra ON r.results_ID = ra.results_ID "
+            "LEFT JOIN questions q ON ra.question_ID = q.question_ID "
+            "LEFT JOIN answers a ON ra.answer_ID = a.answer_ID "
+            "WHERE r.results_ID = %s ORDER BY q.question_ID",
+            (result_id,),
+        )
+        rows = cursor.fetchall()
+        if not rows:
+            return None
+        return [row for row in rows if row["question_ID"] is not None]
     finally:
         cursor.close()
         connection.close()

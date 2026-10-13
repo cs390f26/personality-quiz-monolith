@@ -316,7 +316,7 @@ main {
 	border-radius: 999px;
 	font-size: 0.96rem;
 	font-weight: 700;
-	cursor: default;
+	cursor: pointer;
 }
 
 .stats-button {
@@ -782,7 +782,27 @@ main {
 	border: none;
 	border-radius: 6px;
 	font-size: 1rem;
-	cursor: default;
+	cursor: pointer;
+}
+
+.stats-button:hover,
+.secondary-button:hover {
+	filter: brightness(0.96);
+}
+
+.stats-button:focus-visible,
+.secondary-button:focus-visible {
+	outline: 3px solid #1f2937;
+	outline-offset: 3px;
+}
+
+.results-error {
+	color: #b42318;
+	font-weight: 600;
+}
+
+.breakdown-message {
+	color: #64748b;
 }
 
 .stats-button {

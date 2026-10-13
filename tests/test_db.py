@@ -138,6 +138,50 @@ def test_save_result_inserts_name_and_personality_and_commits(
     connection.close.assert_called_once_with()
 
 
+def test_save_result_stores_selected_answers_in_the_same_transaction(
+    database_connection,
+):
+    connection, cursor = database_connection
+
+    db.save_result("Ada", 3, selected_answers=[(1, 4), (2, 7)])
+
+    assert cursor.execute.call_count == 3
+    query, parameters = cursor.execute.call_args_list[-1].args
+    assert "insert into quiz_result_answers" in query.lower()
+    assert parameters == (cursor.lastrowid, 2, 7)
+    connection.commit.assert_called_once_with()
+
+
+def test_get_result_answers_returns_selected_question_and_answer_text(
+    database_connection,
+):
+    connection, cursor = database_connection
+    answers = [
+        {
+            "question_ID": 1,
+            "question_text": "Choose an activity",
+            "answer_ID": 4,
+            "answer_text": "Spend time with friends",
+        }
+    ]
+    cursor.fetchall.return_value = answers
+
+    assert db.get_result_answers(12) == answers
+
+    query, parameters = cursor.execute.call_args.args
+    assert "quiz_result_answers" in query
+    assert parameters == (12,)
+    cursor.close.assert_called_once_with()
+    connection.close.assert_called_once_with()
+
+
+def test_get_result_answers_returns_none_for_unknown_attempt(database_connection):
+    _, cursor = database_connection
+    cursor.fetchall.return_value = []
+
+    assert db.get_result_answers(999) is None
+
+
 def test_get_statistics_returns_aggregate_rows(database_connection):
     connection, cursor = database_connection
     statistics = [

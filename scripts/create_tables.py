@@ -9,7 +9,12 @@ from personality_quiz.settings import ensure_settings
 
 
 REQUIRED_TABLES = (
-    "questions", "personality_types", "answers", "quiz_results", "quiz_result_ties"
+    "questions",
+    "personality_types",
+    "answers",
+    "quiz_results",
+    "quiz_result_ties",
+    "quiz_result_answers",
 )
 
 CREATE_TABLES_SQL = """
@@ -57,6 +62,22 @@ CREATE TABLE IF NOT EXISTS quiz_result_ties (
     CONSTRAINT fk_ties_personality
         FOREIGN KEY (personality_ID)
         REFERENCES personality_types(personality_ID)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
+
+CREATE TABLE IF NOT EXISTS quiz_result_answers (
+    results_ID INT NOT NULL,
+    question_ID TINYINT NOT NULL,
+    answer_ID TINYINT NOT NULL,
+    PRIMARY KEY (results_ID, question_ID),
+    CONSTRAINT fk_result_answers_result
+        FOREIGN KEY (results_ID)
+        REFERENCES quiz_results(results_ID) ON DELETE CASCADE,
+    CONSTRAINT fk_result_answers_question
+        FOREIGN KEY (question_ID)
+        REFERENCES questions(question_ID),
+    CONSTRAINT fk_result_answers_answer
+        FOREIGN KEY (answer_ID)
+        REFERENCES answers(answer_ID)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 """
 
