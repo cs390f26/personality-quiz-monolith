@@ -82,6 +82,30 @@ CREATE TABLE IF NOT EXISTS quiz_result_answers (
 """
 
 
+def _migrate_legacy_ties(cursor) -> None:
+    """Copy additional winners from the legacy link table when it exists."""
+    cursor.execute(
+        """
+        SELECT COUNT(*)
+        FROM information_schema.tables
+        WHERE table_schema = DATABASE()
+          AND table_name = %s
+        """,
+        ("quiz_result_personalities",),
+    )
+    if cursor.fetchone()[0]:
+        cursor.execute(
+            """
+            INSERT IGNORE INTO quiz_result_ties (results_ID, personality_ID)
+            SELECT legacy.results_ID, legacy.personality_ID
+            FROM quiz_result_personalities AS legacy
+            JOIN quiz_results AS saved
+              ON saved.results_ID = legacy.results_ID
+            WHERE legacy.personality_ID <> saved.personality_ID
+            """
+        )
+
+
 def _tables_exist(cursor) -> bool:
     """Return whether any required quiz tables already exist."""
     cursor.execute("SHOW TABLES")
@@ -111,6 +135,7 @@ def main() -> None:
             for statement in CREATE_TABLES_SQL.split(";"):
                 if statement.strip():
                     cursor.execute(statement)
+            _migrate_legacy_ties(cursor)
 
         print("MySQL tables are ready.")
     except Error as exc:
