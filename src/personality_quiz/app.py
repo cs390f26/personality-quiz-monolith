@@ -158,6 +158,21 @@ def create_app() -> Flask:
         )
         return jsonify(_result_json(db.get_result(result_id))), 201
 
+    @app.get("/quiz-results")
+    def list_quiz_results():
+        results_by_id = {}
+        for row in db.get_result_history():
+            result_id = row["results_ID"]
+            if result_id not in results_by_id:
+                results_by_id[result_id] = {
+                    "resultId": result_id,
+                    "personName": row["person_name"],
+                    "completedDate": row["completed_date"].isoformat(),
+                    "personalities": [],
+                }
+            results_by_id[result_id]["personalities"].append(row["personality_type"])
+        return jsonify({"results": list(results_by_id.values())})
+
     @app.get("/quiz-results/<int:result_id>/answers")
     def get_quiz_result_answers(result_id):
         answers = db.get_result_answers(result_id)

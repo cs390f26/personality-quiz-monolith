@@ -182,6 +182,35 @@ def test_get_result_answers_returns_none_for_unknown_attempt(database_connection
     assert db.get_result_answers(999) is None
 
 
+def test_get_result_history_returns_attempts_with_all_winning_categories(
+    database_connection,
+):
+    connection, cursor = database_connection
+    history = [
+        {
+            "results_ID": 12,
+            "person_name": "Ada",
+            "completed_date": "2026-10-12",
+            "personality_type": "Blue",
+        },
+        {
+            "results_ID": 12,
+            "person_name": "Ada",
+            "completed_date": "2026-10-12",
+            "personality_type": "Green",
+        },
+    ]
+    cursor.fetchall.return_value = history
+
+    assert db.get_result_history() == history
+
+    query = cursor.execute.call_args.args[0].lower()
+    assert "quiz_result_ties" in query
+    assert "order by" in query
+    cursor.close.assert_called_once_with()
+    connection.close.assert_called_once_with()
+
+
 def test_get_statistics_returns_aggregate_rows(database_connection):
     connection, cursor = database_connection
     statistics = [

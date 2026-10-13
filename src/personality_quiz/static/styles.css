@@ -837,6 +837,18 @@ main {
 	line-height: 1.6;
 }
 
+.statistics-total {
+	text-align: center;
+	font-weight: 700;
+	color: #334155;
+}
+
+.statistics-error {
+	color: #a12622;
+	font-weight: 600;
+	text-align: center;
+}
+
 .statistics-grid {
 	display: grid;
 	grid-template-columns: repeat(2, 1fr);
@@ -863,6 +875,11 @@ main {
 	font-weight: bold;
 }
 
+.stat-count {
+	margin-bottom: 0;
+	color: #64748b;
+}
+
 .blue-stat {
 	border-top: 6px solid #4f86c6;
 }
@@ -885,8 +902,71 @@ main {
 	color: #666666;
 }
 
+.history-card {
+	width: 100%;
+	margin-top: 32px;
+	margin-right: auto;
+	margin-left: auto;
+	padding: 28px 32px;
+	background-color: #ffffff;
+	border: 1px solid #dddddd;
+	border-radius: 8px;
+	text-align: center;
+}
+
+.history-card h2 {
+	margin-top: 0;
+}
+
+.attempt-history-list {
+	display: flex;
+	flex-direction: column;
+	gap: 12px;
+	margin: 18px 0 0;
+	padding: 0;
+	list-style: none;
+}
+
+.attempt-history-item {
+	display: flex;
+	justify-content: space-between;
+	align-items: center;
+	gap: 16px;
+	padding: 14px 16px;
+	background-color: #f9f9f9;
+	border: 1px solid #eeeeee;
+	border-radius: 10px;
+	text-align: left;
+}
+
+.attempt-history-details {
+	font-weight: 600;
+	color: #334155;
+}
+
+.attempt-result-link {
+	flex-shrink: 0;
+	color: #287a7d;
+	font-weight: 700;
+}
+
+.statistics-actions {
+	display: flex;
+	justify-content: center;
+	margin-top: 24px;
+}
+
 @media (max-width: 600px) {
 	.statistics-grid {
 		grid-template-columns: 1fr;
+	}
+
+	.history-card {
+		padding: 24px 18px;
+	}
+
+	.attempt-history-item {
+		align-items: flex-start;
+		flex-direction: column;
 	}
 }

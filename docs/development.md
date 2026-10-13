@@ -201,7 +201,7 @@ PYTHONPATH=src python -m personality_quiz.app
 
 The entry point checks the configured MySQL connection, then listens on port **5000**. Open [http://127.0.0.1:5000/](http://127.0.0.1:5000/).
 
-The API serves `/questions`, `POST /quiz-results`, `/quiz-results/{resultId}`, `/statistics`, and `/health`. The `/quiz` page loads questions from `/questions`, submits completed attempts to `/quiz-results`, and the `/results` page loads the saved result. The home and statistics pages are still static. The API validates against all questions stored in the database; the development seed contains five of the planned ten questions. A `503` from `/questions` means the app cannot reach the configured MySQL database; check the database service and the `.env` settings in the setup steps above.
+The API serves `/questions`, `POST /quiz-results`, `GET /quiz-results`, `/quiz-results/{resultId}`, `/statistics`, and `/health`. The `/quiz` page loads questions from `/questions`, submits completed attempts to `/quiz-results`, and the `/results` page loads the saved result. The home page displays completed-attempt totals, and the statistics page loads category counts and percentages plus links to previous attempts. Category percentages can sum above 100% when attempts have tied results, since each winning category receives credit. The API validates against all questions stored in the database; the development seed contains five of the planned ten questions. A `503` from `/questions` means the app cannot reach the configured MySQL database; check the database service and the `.env` settings in the setup steps above.
 
 ## 10. Run acceptance tests (pending implementation)
 

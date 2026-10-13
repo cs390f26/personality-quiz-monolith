@@ -156,6 +156,29 @@ def get_result_answers(result_id):
         connection.close()
 
 
+def get_result_history():
+    """Return every completed attempt with all of its winning categories."""
+    connection = get_connection()
+    cursor = connection.cursor(dictionary=True)
+    try:
+        cursor.execute(
+            "SELECT r.results_ID, r.person_name, r.completed_date, "
+            "pt.personality_type "
+            "FROM quiz_results r "
+            "JOIN ("
+            "SELECT results_ID, personality_ID FROM quiz_results UNION "
+            "SELECT results_ID, personality_ID FROM quiz_result_ties"
+            ") winners ON r.results_ID = winners.results_ID "
+            "JOIN personality_types pt "
+            "ON winners.personality_ID = pt.personality_ID "
+            "ORDER BY r.completed_date DESC, r.results_ID DESC, pt.personality_ID"
+        )
+        return cursor.fetchall()
+    finally:
+        cursor.close()
+        connection.close()
+
+
 def get_statistics():
     """Count attempts once overall and once for each winning category.
 

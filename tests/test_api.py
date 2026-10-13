@@ -101,3 +101,51 @@ def test_get_quiz_result_answers_returns_404_for_unknown_attempt(monkeypatch):
 
     assert response.status_code == 404
     assert response.json["error"]["code"] == "NOT_FOUND"
+
+
+def test_list_quiz_results_returns_attempts_with_all_winning_categories(monkeypatch):
+    app = create_app()
+    app.config.update(TESTING=True)
+    monkeypatch.setattr(
+        db,
+        "get_result_history",
+        lambda: [
+            {
+                "results_ID": 42,
+                "person_name": "Ada",
+                "completed_date": date(2026, 10, 12),
+                "personality_type": "Blue",
+            },
+            {
+                "results_ID": 42,
+                "person_name": "Ada",
+                "completed_date": date(2026, 10, 12),
+                "personality_type": "Green",
+            },
+        ],
+    )
+
+    response = app.test_client().get("/quiz-results")
+
+    assert response.status_code == 200
+    assert response.json == {
+        "results": [
+            {
+                "resultId": 42,
+                "personName": "Ada",
+                "completedDate": "2026-10-12",
+                "personalities": ["Blue", "Green"],
+            }
+        ]
+    }
+
+
+def test_list_quiz_results_returns_empty_list_when_no_attempts_exist(monkeypatch):
+    app = create_app()
+    app.config.update(TESTING=True)
+    monkeypatch.setattr(db, "get_result_history", lambda: [])
+
+    response = app.test_client().get("/quiz-results")
+
+    assert response.status_code == 200
+    assert response.json == {"results": []}
