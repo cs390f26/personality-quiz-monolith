@@ -119,7 +119,7 @@ mysql -h 127.0.0.1 -P 3306 -u quiz_app -p personality_quiz -e "SELECT 1;"
 Enter the application password from step 5. Then check the Python connection using `.env`:
 
 ```bash
-python -c "from personality_quiz.db import ping; ping(); print('MySQL connection successful')"
+PYTHONPATH=src python -c "from personality_quiz.db import ping; ping(); print('MySQL connection successful')"
 ```
 
 This checks connectivity, not whether the tables or quiz content exist.
@@ -134,9 +134,9 @@ With the virtual environment active, MySQL running, and `.env` configured:
 PYTHONPATH=src python scripts/create_tables.py
 ```
 
-This uses the application account and creates any missing quiz tables: `questions`, `personality_types`, `answers`, `quiz_results`, and `quiz_result_ties`. Foreign keys connect answers to questions and personality types, and results to personality types. Each completed attempt has one row in `quiz_results`; additional winning categories for a tie are stored in `quiz_result_ties` and saved in the same transaction. Existing tables and results are left in place.
+This uses the application account and creates any missing quiz tables: `questions`, `personality_types`, `answers`, `quiz_results`, `quiz_result_ties`, and `quiz_result_answers`. Foreign keys connect answers to questions and personality types, results to personality types, and each saved answer to its result attempt. Each completed attempt has one row in `quiz_results`; additional winning categories for a tie and the selected question answers are stored in related tables and saved in the same transaction. Existing tables and results are left in place.
 
-The script is safe to rerun and can fill in tables missing from a partially initialized database. It does not alter the columns of existing tables.
+The script is safe to rerun and can fill in tables missing from a partially initialized database, including `quiz_result_answers` for answer breakdowns. It does not alter the columns of existing tables.
 
 ### Add tie support to an existing database
 
