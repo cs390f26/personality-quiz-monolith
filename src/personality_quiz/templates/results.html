@@ -16,15 +16,13 @@
         <section class="results-card">
             <div class="result-badge">Your Result</div>
 
-            <h2>Congratulations, person_name!<br />You got:</span></h2>
+            <h2 id="result-heading">Loading your results...</h2>
+            <p class="results-error" role="alert" hidden></p>
 
             <div class="result-panel">
                 <p class="result-label">Personality Type</p>
-                <h3 class="personality-result color-blue">Blue</h3>
-                <p class="result-description">
-                    You are thoughtful, empathetic, and deeply connected to the people around you.
-                    You value meaningful relationships and are often the person others turn to for support.
-                </p>
+                <h3 class="personality-result">Loading...</h3>
+                <p class="result-description"></p>
             </div>
 
             <div class="result-actions">
@@ -34,28 +32,8 @@
 
             <div class="answers-review" aria-label="Answer review">
                 <h3>Your Breakdown</h3>
-                <ul class="response-list">
-                    <li class="response-item">
-                        <span class="response-question">Which activity sounds most appealing?</span>
-                        <span class="response-answer">Trying something exciting and spontaneous</span>
-                    </li>
-                    <li class="response-item">
-                        <span class="response-question">How do you usually approach a new problem?</span>
-                        <span class="response-answer">Talk it through with others</span>
-                    </li>
-                    <li class="response-item">
-                        <span class="response-question">What do you value most when working in a group?</span>
-                        <span class="response-answer">Cooperation and understanding</span>
-                    </li>
-                    <li class="response-item">
-                        <span class="response-question">Which environment do you prefer?</span>
-                        <span class="response-answer">A friendly environment with lots of interaction</span>
-                    </li>
-                    <li class="response-item">
-                        <span class="response-question">What best describes how you make decisions?</span>
-                        <span class="response-answer">I consider how the decision affects people</span>
-                    </li>
-                </ul>
+                <p class="breakdown-message" role="status">Loading your answers...</p>
+                <ul class="response-list"></ul>
             </div>
         </section>
     </main>
@@ -63,5 +41,151 @@
     <footer>
         Personality Quiz Project
     </footer>
+
+    <script>
+        const resultHeading = document.querySelector("#result-heading");
+        const resultsError = document.querySelector(".results-error");
+        const personalityResult = document.querySelector(".personality-result");
+        const resultDescription = document.querySelector(".result-description");
+        const resultLabel = document.querySelector(".result-label");
+        const breakdownMessage = document.querySelector(".breakdown-message");
+        const responseList = document.querySelector(".response-list");
+
+        async function requestJson(url) {
+            let response;
+            try {
+                response = await fetch(url);
+            } catch {
+                throw new Error("Could not connect to the quiz service. Check your connection and try again.");
+            }
+
+            let data;
+            try {
+                data = await response.json();
+            } catch {
+                throw new Error(`The server returned an invalid response (${response.status}).`);
+            }
+
+            if (!response.ok) {
+                if (response.status === 503 || data?.status === "unavailable") {
+                    throw new Error("The quiz service cannot reach its database. Check that MySQL is running and the database settings are correct, then try again.");
+                }
+                throw new Error(data?.error?.message || `Request failed (${response.status}).`);
+            }
+            return data;
+        }
+
+        function renderResult(result) {
+            const personalities = Array.isArray(result.personalities)
+                ? result.personalities
+                : result.personality
+                    ? [result.personality]
+                    : [];
+            if (
+                typeof result.personName !== "string" ||
+                personalities.length === 0 ||
+                personalities.some((personality) =>
+                    typeof personality.personalityType !== "string" ||
+                    typeof personality.description !== "string"
+                )
+            ) {
+                throw new Error("The server returned invalid quiz results.");
+            }
+
+            resultHeading.textContent = `Congratulations, ${result.personName}!`;
+            personalityResult.textContent = personalities
+                .map((personality) => personality.personalityType)
+                .join(" / ");
+            resultDescription.textContent = personalities
+                .map((personality) => personality.description)
+                .join(" ");
+            resultLabel.textContent = personalities.length === 1
+                ? "Personality Type"
+                : "Personality Types";
+            personalityResult.className = "personality-result";
+            if (personalities.length === 1) {
+                const colorClass = personalities[0].personalityType.toLowerCase();
+                if (["blue", "green", "gold", "orange"].includes(colorClass)) {
+                    personalityResult.classList.add(`color-${colorClass}`);
+                }
+            }
+        }
+
+        function renderAnswers(data) {
+            if (!data || !Array.isArray(data.answers)) {
+                throw new Error("The server returned invalid answer details.");
+            }
+
+            if (data.answers.length === 0) {
+                breakdownMessage.textContent = "Answer details are not available for this attempt.";
+                return;
+            }
+
+            const fragment = document.createDocumentFragment();
+            for (const answer of data.answers) {
+                if (
+                    typeof answer.questionText !== "string" ||
+                    typeof answer.answerText !== "string"
+                ) {
+                    throw new Error("The server returned invalid answer details.");
+                }
+                const item = document.createElement("li");
+                item.className = "response-item";
+                const question = document.createElement("span");
+                question.className = "response-question";
+                question.textContent = answer.questionText;
+                const response = document.createElement("span");
+                response.className = "response-answer";
+                response.textContent = answer.answerText;
+                item.append(question, response);
+                fragment.append(item);
+            }
+            responseList.replaceChildren(fragment);
+            breakdownMessage.hidden = true;
+        }
+
+        async function loadResults() {
+            const resultId = Number(new URLSearchParams(window.location.search).get("resultId"));
+            if (!Number.isInteger(resultId) || resultId < 1) {
+                resultsError.textContent = "A valid quiz attempt was not specified.";
+                resultsError.hidden = false;
+                resultHeading.textContent = "Results unavailable";
+                breakdownMessage.textContent = "No quiz attempt was specified.";
+                return;
+            }
+
+            try {
+                const result = await requestJson(`/quiz-results/${encodeURIComponent(resultId)}`);
+                renderResult(result);
+            } catch (error) {
+                resultsError.textContent = error instanceof Error
+                    ? error.message
+                    : "Unable to load your quiz results.";
+                resultsError.hidden = false;
+                resultHeading.textContent = "Results unavailable";
+                personalityResult.textContent = "";
+            }
+
+            try {
+                const answers = await requestJson(
+                    `/quiz-results/${encodeURIComponent(resultId)}/answers`
+                );
+                renderAnswers(answers);
+            } catch (error) {
+                breakdownMessage.textContent = error instanceof Error
+                    ? error.message
+                    : "Unable to load your answer details.";
+            }
+        }
+
+        document.querySelector(".stats-button").addEventListener("click", () => {
+            window.location.assign("/statistics-page");
+        });
+        document.querySelector(".secondary-button").addEventListener("click", () => {
+            window.location.assign("/quiz");
+        });
+
+        loadResults();
+    </script>
 </body>
 </html>

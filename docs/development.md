@@ -113,7 +113,7 @@ mysql -h 127.0.0.1 -P 3306 -u quiz_app -p personality_quiz -e "SELECT 1;"
 Verify the Python connection using `.env`:
 
 ```bash
-python -c "from personality_quiz.db import ping; ping(); print('MySQL connection successful')"
+PYTHONPATH=src python -c "from personality_quiz.db import ping; ping(); print('MySQL connection successful')"
 ```
 
 MySQL stores data on disk in its own data directory. Stopping it does not erase your tables or results. For this Homebrew installation, stop it with `brew services stop mysql`; start it again with `brew services start mysql`.
@@ -127,7 +127,9 @@ PYTHONPATH=src python scripts/create_tables.py
 ```
 It should confirm success with `MySQL tables are ready.`
 
-The script is safe to rerun and can fill in tables missing from a partially initialized database. It does not alter the columns of existing tables.
+This uses the application account and creates any missing quiz tables: `questions`, `personality_types`, `answers`, `quiz_results`, `quiz_result_ties`, and `quiz_result_answers`. Foreign keys connect answers to questions and personality types, results to personality types, and each saved answer to its result attempt. Each completed attempt has one row in `quiz_results`; additional winning categories for a tie and the selected question answers are stored in related tables and saved in the same transaction. Existing tables and results are left in place.
+
+The script is safe to rerun and can fill in tables missing from a partially initialized database, including `quiz_result_answers` for answer breakdowns. It does not alter the columns of existing tables.
 
 ### Add tie support to an existing database
 
@@ -141,14 +143,14 @@ This migration can be run again safely. Fresh databases created with the updated
 
 ### Initialize or repair quiz content
 
-For a fresh or partially initialized database, run the same table and seed steps above and below. The seed file uses `INSERT IGNORE`, so existing rows with the same IDs are preserved and missing development questions and answers are added:
+For a fresh or partially initialized database, create the tables and load the sample rows:
 
 ```bash
 PYTHONPATH=src python scripts/create_tables.py
-mysql -h 127.0.0.1 -P 3306 -u quiz_app -p personality_quiz < data/sample-data.sql
+PYTHONPATH=src python scripts/seed.py
 ```
 
-This keeps existing quiz results and legacy result-personality links; no separate legacy upgrade script is needed.
+The seed script reads the database connection settings from `.env` (or the environment), verifies that the `personality_types`, `questions`, `answers`, and `quiz_results` tables exist, then executes `data/sample-data.sql`. If a required table is missing, create the tables first. On a load failure, the script rolls back the transaction and prints the error. The SQL uses `INSERT IGNORE`, so existing rows with the sample IDs are preserved and missing rows are added; existing quiz results and legacy result-personality links are not deleted or rewritten.
 
 ### Reset the local quiz tables when needed
 
@@ -167,12 +169,12 @@ Recreate the tables with `PYTHONPATH=src python scripts/create_tables.py`, then 
 With MySQL running and the tables created:
 
 ```bash
-mysql -h 127.0.0.1 -P 3306 -u quiz_app -p personality_quiz < data/sample-data.sql
+PYTHONPATH=src python scripts/seed.py
 ```
 
-The file inserts four personality types, five questions, twenty answer choices, and five example completed results. Quiz questions, answers, and personality types are required for a usable quiz. Example completed results are optional in principle, but this file inserts them together with the quiz content.
+The script reads the database settings from `.env` (or the environment) and loads `data/sample-data.sql`, which inserts four personality types, five questions, twenty answer choices, and five example completed results. Quiz questions, answers, and personality types are required for a usable quiz. Example completed results are optional in principle, but this file inserts them together with the quiz content. Before loading, the script checks that the `personality_types`, `questions`, `answers`, and `quiz_results` tables exist. If a table is missing, it reports the missing tables and directs you to run `PYTHONPATH=src python scripts/create_tables.py`.
 
-This import can be rerun safely. It uses `INSERT IGNORE` with fixed IDs, which inserts missing sample rows and leaves existing rows unchanged.
+This import can be rerun safely. It uses `INSERT IGNORE` with fixed IDs, which inserts missing sample rows and leaves existing rows unchanged. Changes are committed after all SQL statements execute; if loading fails, the transaction is rolled back and the script exits with an error.
 
 Verify the row counts:
 
@@ -192,6 +194,6 @@ PYTHONPATH=src python -m personality_quiz.app
 
 The entry point checks the configured MySQL connection, then listens on port **5000**. Open [http://127.0.0.1:5000/](http://127.0.0.1:5000/).
 
-The API serves `/questions`, `POST /quiz-results`, `/quiz-results/{resultId}`, `/statistics`, and `/health`. The `/quiz` page loads questions from `/questions`, submits completed attempts to `/quiz-results`, and the `/results` page loads the saved result. The home and statistics pages are still static. The API validates against all questions stored in the database; the development seed contains five of the planned ten questions. A `503` from `/questions` means the app cannot reach the configured MySQL database; check the database service and the `.env` settings in the setup steps above.
+The API serves `/questions`, `POST /quiz-results`, `GET /quiz-results`, `/quiz-results/{resultId}`, `/statistics`, and `/health`. The `/quiz` page loads questions from `/questions`, submits completed attempts to `/quiz-results`, and the `/results` page loads the saved result. The home page displays completed-attempt totals, and the statistics page loads category counts and percentages plus links to previous attempts. Category percentages can sum above 100% when attempts have tied results, since each winning category receives credit. The API validates against all questions stored in the database; the development seed contains five of the planned ten questions. A `503` from `/questions` means the app cannot reach the configured MySQL database; check the database service and the `.env` settings in the setup steps above.
 
 ## 10. Run acceptance tests (pending implementation)
