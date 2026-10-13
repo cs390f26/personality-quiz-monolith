@@ -8,29 +8,27 @@ How to set up this project on your laptop: Python environment, tests, lint, MySQ
 - **MySQL Server and the `mysql` command-line client**
 - **Homebrew**, if using the macOS installation commands below
 
-Confirm Python with `python3 --version`. After installing MySQL, confirm its client with `mysql --version`.
+Confirm Python with `python3 --version`. Confirm the MySQL client with `mysql --version`.
 
-## 1. Create a virtual environment
+## 1. Create and activate a virtual environment
 
-From the root of the project:
+In the project root:
 
 ```bash
 python3 -m venv .venv
 source .venv/bin/activate
 ```
 
-Use a Python executable that reports version 3.12 or newer. Activate the environment again whenever you open a new terminal to run project commands.
+## 2. Install necessary libraries
 
-## 2. Install libraries
+Run the following while the virtual environment is active:
 
 ```bash
 python -m pip install -r requirements.txt
 python -m pip install -e .
 ```
 
-The editable install (`-e .`) makes the `personality_quiz` package importable while you edit source under `src/personality_quiz/`.
-
-Verify the package is importable:
+Confirm the package is importable by recieving the output of the print statement when this command is run:
 
 ```bash
 python -c "import personality_quiz; print('Package import successful')"
@@ -38,26 +36,24 @@ python -c "import personality_quiz; print('Package import successful')"
 
 ## 3. Run tests
 
-With the virtual environment active:
+With the virtual environment still active, run:
 
 ```bash
 python -m pytest tests
 ```
 
-The tests in `tests/test_db.py` mock the MySQL connection and cursor. The HTTP tests in `tests/test_api.py` use a fresh in-memory database with the project schema and sample data, plus five test questions to exercise a ten-question quiz. Neither suite requires a running MySQL server or changes your local database. These tests cover validation, scoring, saved results, ties, statistics, and database failures; they do not verify MySQL-specific behavior.
+This command executes all test functions and files in the `tests` directory and generates a coverage percentage report in the terminal. The goal is 90% coverage.
 
 
 ## 4. Configure `.env`
 
-For a fresh checkout, copy the example file:
+Copy the example file:
 
 ```bash
 cp config/example.env .env
 ```
 
-If `.env` already exists, edit it instead of overwriting your settings. Keep it out of Git; it is listed in `.gitignore`.
-
-For the local database created by `scripts/setup_db.sql`, use:
+Alter the `DB_PASSWORD` field of the `.env` to `quiz_password` for the local database created by `scripts/setup_db.sql`. This is a local development example password; we will use a separate password for deployment.  The file should now resemble the following:
 
 ```dotenv
 DB_HOST=127.0.0.1
@@ -75,23 +71,23 @@ DB_PASSWORD=quiz_password
 | `DB_USER` | MySQL account used by the application and table-creation script. |
 | `DB_PASSWORD` | Password for that MySQL account. |
 
-All five values are required. The example file uses `CHANGE_ME`, but the bootstrap SQL creates the local account with `quiz_password`. Replace `CHANGE_ME` to match that account. This is a local development example password; use a separate password for deployment. If the account already exists, the bootstrap's `CREATE USER IF NOT EXISTS` does not change its password.
-
 Python code loads `.env` through `settings.py`. The `mysql` client does **not** read this file: the commands below explicitly use the example host, port, user, and database. Adjust those arguments if you choose different settings. The `-p` option prompts for a password.
 
 ## 5. Install MySQL
 
-If MySQL Server and its client are already installed, skip installation. On macOS with Homebrew:
+If MySQL Server and its client are already installed, skip this step.
+
+On macOS with Homebrew:
 
 ```bash
 brew install mysql
 ```
 
-See the [Homebrew MySQL formula](https://formulae.brew.sh/formula/mysql) for installation and service details. On other operating systems, install MySQL Server and its command-line client using the appropriate installer or package manager before continuing.
+See the [Homebrew MySQL formula](https://formulae.brew.sh/formula/mysql) for further installation and service details. On other operating systems, install MySQL Server and its command-line client using the appropriate installer or package manager before continuing.
 
 ## 6. Start MySQL and create the database
 
-For the Homebrew installation above:
+Run the following two commands. The second should show the mysql status as `started`:
 
 ```bash
 brew services start mysql
@@ -100,47 +96,42 @@ brew services list
 
 MySQL runs as a background service on port **3306**. If you installed it another way, use that installation's service controls.
 
-Create the database and application account using a **MySQL administrator**:
+Create the database and application account using a **MySQL administrator**. When prompted for a password, enter your MySQL administration password instead of the application password. For a fresh local installation with no root password, press Enter at the prompt. Use the administrator account configured for your installation if it is not `root`:
 
 ```bash
 mysql -u root -p < scripts/setup_db.sql
 ```
 
-Enter your MySQL administrator password, not the application password. For a fresh local installation with no root password, press Enter at the prompt. Use the administrator account configured for your installation if it is not `root`.
+The `setup_db.sql` script creates the `personality_quiz` database and `quiz_app` for `localhost` if absent, and grants that account privileges on `personality_quiz.*`.
 
-The script creates the `personality_quiz` database, creates `quiz_app` for `localhost` if absent, and grants that account privileges on `personality_quiz.*`.
-
-Check that the application account can connect over TCP:
+Check that the application account can connect over TCP. This time, when prompted, enter the application password:
 
 ```bash
 mysql -h 127.0.0.1 -P 3306 -u quiz_app -p personality_quiz -e "SELECT 1;"
 ```
 
-Enter the application password from step 5. Then check the Python connection using `.env`:
+Verify the Python connection using `.env`:
 
 ```bash
 python -c "from personality_quiz.db import ping; ping(); print('MySQL connection successful')"
 ```
 
-This checks connectivity, not whether the tables or quiz content exist.
-
 MySQL stores data on disk in its own data directory. Stopping it does not erase your tables or results. For this Homebrew installation, stop it with `brew services stop mysql`; start it again with `brew services start mysql`.
 
 ## 7. Create the quiz tables
 
-With the virtual environment active, MySQL running, and `.env` configured:
+With the virtual environment active, MySQL running, and `.env` configured, execute this command to create the tables that make up our database schema:
 
 ```bash
 PYTHONPATH=src python scripts/create_tables.py
 ```
-
-This uses the application account and creates any missing quiz tables: `questions`, `personality_types`, `answers`, `quiz_results`, and `quiz_result_ties`. Foreign keys connect answers to questions and personality types, and results to personality types. Each completed attempt has one row in `quiz_results`; additional winning categories for a tie are stored in `quiz_result_ties` and saved in the same transaction. Existing tables and results are left in place.
+It should confirm success with `MySQL tables are ready.`
 
 The script is safe to rerun and can fill in tables missing from a partially initialized database. It does not alter the columns of existing tables.
 
 ### Add tie support to an existing database
 
-If you already created the original four tables, add the new table without deleting questions or saved results:
+If you already created the original four tables, add the new table without deleting questions or saved results. When prompted, enter the application password:
 
 ```bash
 mysql -h 127.0.0.1 -P 3306 -u quiz_app -p personality_quiz < scripts/add_tie_support.sql
@@ -204,7 +195,3 @@ The entry point checks the configured MySQL connection, then listens on port **5
 The API serves `/questions`, `POST /quiz-results`, `/quiz-results/{resultId}`, `/statistics`, and `/health`. The `/quiz` page loads questions from `/questions`, submits completed attempts to `/quiz-results`, and the `/results` page loads the saved result. The home and statistics pages are still static. The API validates against all questions stored in the database; the development seed contains five of the planned ten questions. A `503` from `/questions` means the app cannot reach the configured MySQL database; check the database service and the `.env` settings in the setup steps above.
 
 ## 10. Run acceptance tests (pending implementation)
-
-The repository does not yet contain `tests_ui/` or Playwright dependencies. There is no browser acceptance-test command available today; HTTP API tests run with the command in step 3.
-
-When browser tests are added, document their dependencies, browser installation, app startup, and database setup here. Tests that reset data should use a dedicated test database. The quiz app now has `/health`, but the voting project's fixtures still do not apply to this MySQL application.
