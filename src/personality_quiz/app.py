@@ -140,13 +140,58 @@ def create_app() -> Flask:
 
     @app.post("/quiz-results")
     def submit_quiz():
+        body = request.get_json(silent=True)
         try:
-            name, winners = _score_submission(request.get_json(silent=True))
+            name, winners = _score_submission(body)
         except ValidationError as error:
             return _error("BAD_REQUEST", str(error), 400)
 
-        result_id = db.save_result(name, winners[0], tied_personality_ids=winners[1:])
+        selected_answers = [
+            (selection["questionId"], selection["answerId"])
+            for selection in body["selectedAnswers"]
+        ]
+        result_id = db.save_result(
+            name,
+            winners[0],
+            tied_personality_ids=winners[1:],
+            selected_answers=selected_answers,
+        )
         return jsonify(_result_json(db.get_result(result_id))), 201
+
+    @app.get("/quiz-results")
+    def list_quiz_results():
+        results_by_id = {}
+        for row in db.get_result_history():
+            result_id = row["results_ID"]
+            if result_id not in results_by_id:
+                results_by_id[result_id] = {
+                    "resultId": result_id,
+                    "personName": row["person_name"],
+                    "completedDate": row["completed_date"].isoformat(),
+                    "personalities": [],
+                }
+            results_by_id[result_id]["personalities"].append(row["personality_type"])
+        return jsonify({"results": list(results_by_id.values())})
+
+    @app.get("/quiz-results/<int:result_id>/answers")
+    def get_quiz_result_answers(result_id):
+        answers = db.get_result_answers(result_id)
+        if answers is None:
+            return _error("NOT_FOUND", "Requested resource not found", 404)
+        return jsonify(
+            {
+                "resultId": result_id,
+                "answers": [
+                    {
+                        "questionId": answer["question_ID"],
+                        "questionText": answer["question_text"],
+                        "answerId": answer["answer_ID"],
+                        "answerText": answer["answer_text"],
+                    }
+                    for answer in answers
+                ],
+            }
+        )
 
     @app.get("/quiz-results/<int:result_id>")
     def get_quiz_result(result_id):

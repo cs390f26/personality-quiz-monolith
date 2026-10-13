@@ -20,36 +20,184 @@
             </p>
         </section>
 
-        <section class="statistics-grid">
-            <article class="stat-card blue-stat">
-                <h3>Blue</h3>
-                <p class="stat-percentage">41%</p>
-            </article>
+        <p class="statistics-total" aria-live="polite">Loading statistics...</p>
+        <p class="statistics-error" role="alert" hidden></p>
+        <section class="statistics-grid" aria-label="Results by personality category"></section>
+        <p class="statistics-note">
+            Category percentages are based on completed attempts. Tied results count toward each winning category.
+        </p>
 
-            <article class="stat-card green-stat">
-                <h3>Green</h3>
-                <p class="stat-percentage">32%</p>
-            </article>
-
-            <article class="stat-card yellow-stat">
-                <h3>Gold</h3>
-                <p class="stat-percentage">17%</p>
-            </article>
-
-            <article class="stat-card orange-stat">
-                <h3>Orange</h3>
-                <p class="stat-percentage">10%</p>
-            </article>
+        <section class="history-card" aria-labelledby="attempt-history-heading">
+            <h2 id="attempt-history-heading">Past Quiz Attempts</h2>
+            <p class="attempt-history-message" role="status">Loading past attempts...</p>
+            <ul class="attempt-history-list"></ul>
         </section>
 
-        <p class="statistics-note">
-            These values are mock statistics for the static project mockup.
-        </p>
+        <nav class="statistics-actions" aria-label="Statistics navigation">
+            <a class="start-button" href="{{ url_for('index_page') }}">Back to Home</a>
+        </nav>
     </main>
 
     <footer>
         Personality Quiz Project
     </footer>
+
+    <script>
+        const statisticsGrid = document.querySelector(".statistics-grid");
+        const statisticsTotal = document.querySelector(".statistics-total");
+        const statisticsError = document.querySelector(".statistics-error");
+        const attemptHistoryMessage = document.querySelector(".attempt-history-message");
+        const attemptHistoryList = document.querySelector(".attempt-history-list");
+        const personalityStyles = {
+            blue: "blue-stat",
+            green: "green-stat",
+            gold: "yellow-stat",
+            orange: "orange-stat",
+        };
+
+        async function requestJson(url) {
+            let response;
+            try {
+                response = await fetch(url);
+            } catch {
+                throw new Error("Could not connect to the quiz service. Check your connection and try again.");
+            }
+
+            let data;
+            try {
+                data = await response.json();
+            } catch {
+                throw new Error(`The server returned an invalid response (${response.status}).`);
+            }
+
+            if (!response.ok) {
+                if (response.status === 503 || data?.status === "unavailable") {
+                    throw new Error("The quiz service cannot reach its database. Check that MySQL is running and the database settings are correct, then try again.");
+                }
+                throw new Error(data?.error?.message || `Request failed (${response.status}).`);
+            }
+            return data;
+        }
+
+        function renderStatistics(data) {
+            if (
+                !data ||
+                !Number.isInteger(data.totalCompleted) ||
+                data.totalCompleted < 0 ||
+                !Array.isArray(data.personalityTypes)
+            ) {
+                throw new Error("The server returned invalid quiz statistics.");
+            }
+
+            const total = data.totalCompleted;
+            statisticsTotal.textContent =
+                `${total} quiz ${total === 1 ? "attempt" : "attempts"} completed`;
+            const cards = document.createDocumentFragment();
+
+            for (const personality of data.personalityTypes) {
+                if (
+                    typeof personality.personalityType !== "string" ||
+                    !Number.isInteger(personality.count) ||
+                    personality.count < 0
+                ) {
+                    throw new Error("The server returned invalid quiz statistics.");
+                }
+
+                const percentage = total === 0
+                    ? 0
+                    : personality.count / total * 100;
+                const card = document.createElement("article");
+                const styleClass =
+                    personalityStyles[personality.personalityType.toLowerCase()];
+                card.className = styleClass
+                    ? `stat-card ${styleClass}`
+                    : "stat-card";
+
+                const heading = document.createElement("h3");
+                heading.textContent = personality.personalityType;
+                const value = document.createElement("p");
+                value.className = "stat-percentage";
+                value.textContent = `${percentage.toFixed(2)}%`;
+                const count = document.createElement("p");
+                count.className = "stat-count";
+                count.textContent =
+                    `${personality.count} ${personality.count === 1 ? "result" : "results"}`;
+                card.append(heading, value, count);
+                cards.append(card);
+            }
+
+            statisticsGrid.replaceChildren(cards);
+        }
+
+        function renderAttempts(data) {
+            if (!data || !Array.isArray(data.results)) {
+                throw new Error("The server returned invalid quiz attempt history.");
+            }
+
+            if (data.results.length === 0) {
+                attemptHistoryMessage.textContent = "No completed quiz attempts yet.";
+                return;
+            }
+
+            const items = document.createDocumentFragment();
+            for (const result of data.results) {
+                if (
+                    !Number.isInteger(result.resultId) ||
+                    result.resultId < 1 ||
+                    typeof result.personName !== "string" ||
+                    typeof result.completedDate !== "string" ||
+                    !Array.isArray(result.personalities) ||
+                    result.personalities.some((personality) =>
+                        typeof personality !== "string"
+                    )
+                ) {
+                    throw new Error("The server returned invalid quiz attempt history.");
+                }
+
+                const item = document.createElement("li");
+                item.className = "attempt-history-item";
+                const details = document.createElement("span");
+                details.className = "attempt-history-details";
+                details.textContent =
+                    `${result.personName} — ${result.personalities.join(" / ")} · ${result.completedDate}`;
+                const link = document.createElement("a");
+                link.className = "attempt-result-link";
+                link.href = `/results?resultId=${encodeURIComponent(result.resultId)}`;
+                link.textContent = "View Results";
+                item.append(details, link);
+                items.append(item);
+            }
+
+            attemptHistoryList.replaceChildren(items);
+            attemptHistoryMessage.hidden = true;
+        }
+
+        async function loadStatistics() {
+            try {
+                const data = await requestJson("/statistics");
+                renderStatistics(data);
+            } catch (error) {
+                statisticsTotal.textContent = "Statistics unavailable.";
+                statisticsError.textContent = error instanceof Error
+                    ? error.message
+                    : "Unable to load quiz statistics.";
+                statisticsError.hidden = false;
+            }
+        }
+
+        async function loadAttempts() {
+            try {
+                const data = await requestJson("/quiz-results");
+                renderAttempts(data);
+            } catch (error) {
+                attemptHistoryMessage.textContent = error instanceof Error
+                    ? `Past attempts could not be loaded: ${error.message}`
+                    : "Past attempts could not be loaded.";
+            }
+        }
+
+        loadStatistics();
+        loadAttempts();
+    </script>
 </body>
 </html>
-
