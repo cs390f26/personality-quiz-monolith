@@ -40,11 +40,9 @@ runuser -u ec2-user -- bash -e -c '
 cat > "$APP_DIR/.env" <<'EOF'
 DB_HOST=127.0.0.1
 DB_PORT=3306
-
-#CHANGE THESE CREDENTIALS BEFORE DEPLOYING
 DB_NAME=personality_quiz
-DB_USER=personality_quiz
-DB_PASSWORD=personality_quiz
+DB_USER=quiz_app
+DB_PASSWORD=quiz_password
 EOF
 chown ec2-user:ec2-user "$APP_DIR/.env"
 chmod 600 "$APP_DIR/.env"
