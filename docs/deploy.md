@@ -10,18 +10,19 @@ The repository URL in `deploy/userdata.sh` is set to `https://github.com/cs390f2
 
 The deployment steps are:
 
-* Install Git and Python 3.12
+* Install Git, Python 3.12, and the local MariaDB (MySQL-compatible) server
 * Clone the repository
 * Set up the `.venv` and install the Python packages
-* Configure `.env` with the MySQL connection settings
-* Start MySQL, create the tables, and load the sample data
+* Start MariaDB and wait for it to accept connections
+* Create the database and account, then write `.env`
+* Create the tables and load the sample data
 * Install and launch the `personality_quiz` systemd service
 
-The `deploy/userdata.sh` script is intended to perform the initial setup. The service file also needs its `Type` and Gunicorn application target corrected before it can run.
+The `deploy/userdata.sh` script performs this setup on an Amazon Linux 2023 instance. It uses the example `quiz_password` credential from `scripts/setup_db.sql`; this is only appropriate for a disposable test instance with no sensitive data. For a persistent deployment, replace it with a private password in both `scripts/setup_db.sql` and `deploy/userdata.sh` before launch. The app's `.env` file is readable only by `ec2-user`. MySQL-compatible database traffic stays local; do not open port 3306 in the instance's security group.
 
 In the EC2 launch dialog:
 
-* Select an Amazon Linux instance with Python 3.12 available.
+* Select an Amazon Linux 2023 instance.
 * Enable HTTP and SSH in the security group. Restrict SSH to trusted addresses.
 * Paste the completed `deploy/userdata.sh` into **Advanced details → User data**.
 
@@ -36,8 +37,8 @@ sudo tail -n 200 /var/log/cloud-init-output.log
 ## Other Useful Commands on the EC2 Instance
 
 * `sudo systemctl status personality_quiz` — see the app service status
-* `sudo systemctl status mysql` — see the MySQL service status
+* `sudo systemctl status mariadb` — see the local database service status
 * `curl -i http://localhost/health` — check the app and its MySQL connection
 * `sudo systemctl restart personality_quiz` — restart the app service
 * `sudo journalctl -u personality_quiz -f` — follow the app logs
-* `sudo journalctl -u mysql -f` — follow the MySQL logs
+* `sudo journalctl -u mariadb -f` — follow the database logs

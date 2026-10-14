@@ -1,17 +1,17 @@
 [Unit]
 Description=Personality Quiz Monolith
-After=network-online.target mysql.service
+After=network-online.target mariadb.service
 Wants=network-online.target
 
 [Service]
-Type-simple
+Type=simple
 User=ec2-user
 WorkingDirectory=/home/ec2-user/personality-quiz-monolith
 EnvironmentFile=/home/ec2-user/personality-quiz-monolith/.env
 # Bind to port 80 without running the whole process as root.
 AmbientCapabilities=CAP_NET_BIND_SERVICE
 CapabilityBoundingSet=CAP_NET_BIND_SERVICE
-ExecStart=/home/ec2-user/personality-quiz-monolith/.venv/bin/gunicorn --workers 2 --bind 0.0.0.0:80 'personality-quiz.app:launch()'
+ExecStart=/home/ec2-user/personality-quiz-monolith/.venv/bin/gunicorn --workers 2 --bind 0.0.0.0:80 'personality_quiz.app:launch()'
 Restart=on-failure
 RestartSec=5
 
