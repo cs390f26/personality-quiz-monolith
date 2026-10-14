@@ -22,7 +22,12 @@ VALUES
     (2, 'How do you usually approach a new problem?'),
     (3, 'What do you value most when working in a group?'),
     (4, 'Which environment do you prefer?'),
-    (5, 'What best describes how you make decisions?');
+    (5, 'What best describes how you make decisions?'),
+    (6, 'I am more…'),
+    (7, 'In the workplace I am…'),
+    (8, 'I am…'),
+    (9, 'I tend to…'),
+    (10, 'Others are drawn to me because I am…');
 
 
 -- -----------------------------------------------------
@@ -55,7 +60,32 @@ VALUES
     (17, 5, 'I decide quickly and trust my instincts', 1),
     (18, 5, 'I follow rules and proven methods', 2),
     (19, 5, 'I compare facts and possibilities', 3),
-    (20, 5, 'I consider how the decision affects people', 4);
+    (20, 5, 'I consider how the decision affects people', 4),
+
+    (21, 6, 'Mostly Organized', 2),
+    (22, 6, 'Mostly Flexible', 1),
+    (23, 6, 'Flexible', 1),
+    (24, 6, 'Organized', 2),
+
+    (25, 7, 'Hardworking and organized', 2),
+    (26, 7, 'Friendly and flexible', 1),
+    (27, 7, 'Kind and quiet', 4),
+    (28, 7, 'Creative and full of ideas', 3),
+
+    (29, 8, 'Mostly Realistic', 2),
+    (30, 8, 'Mostly Optimistic', 1),
+    (31, 8, 'Optimistic', 1),
+    (32, 8, 'Realistic', 2),
+
+    (33, 9, 'Mostly Look for affirmation from others', 4),
+    (34, 9, 'Mostly Do whatever I think is best', 3),
+    (35, 9, 'Always Do whatever I think is best', 3),
+    (36, 9, 'Always Look for affirmation from others', 4),
+
+    (37, 10, 'Dependable', 2),
+    (38, 10, 'Fun', 1),
+    (39, 10, 'A good listener', 4),
+    (40, 10, 'Insightful', 3);
 
 
 -- -----------------------------------------------------
