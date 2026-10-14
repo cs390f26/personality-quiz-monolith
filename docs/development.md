@@ -40,10 +40,10 @@ python -c "import personality_quiz; print('Package import successful')"
 With the virtual environment active:
 
 ```bash
-pytest
+python -m pytest tests
 ```
 
-The test configuration reports coverage and requires at least 90%.
+This command executes all test functions and files in the `tests` directory and generates a coverage percentage report in the terminal. The goal is 90% coverage.
 
 
 ## 4. Configure `.env`
@@ -54,7 +54,11 @@ Copy the example file:
 cp config/example.env .env
 ```
 
-Set `DB_PASSWORD=quiz_password` to match the local MySQL account created in the next step. The remaining database settings are documented in `config/example.env`. Keep `.env` out of git; it is listed in `.gitignore`.
+```bash
+nano .env
+```
+
+Set `DB_PASSWORD=quiz_password` to match the local MySQL account created in the next step. The remaining database settings are documented in `config/example.env`.
 
 
 ## 5. Install and start MySQL
@@ -68,7 +72,7 @@ brew services start mysql
 
 MySQL uses port **3306** by default. Start it using the service controls for your installation if you are not using Homebrew.
 
-Create the local database and application account using a MySQL administrator:
+Create the database and application account using a **MySQL administrator**. When prompted for a password, enter your MySQL administration password instead of the application password. For a fresh local installation with no root password, press Enter at the prompt. Use the administrator account configured for your installation if it is not `root`:
 
 ```bash
 mysql -u root -p < scripts/setup_db.sql
