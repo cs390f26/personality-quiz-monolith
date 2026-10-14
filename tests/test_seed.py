@@ -22,7 +22,16 @@ def test_seed_sample_data_executes_sql_and_commits():
     statements = [call.args[0] for call in cursor.execute.call_args_list]
     assert statements[0] == "SHOW TABLES"
     inserts = [statement for statement in statements[1:] if "INSERT IGNORE" in statement]
-    assert len(inserts) == 4
+    assert len(inserts) == 3
+    personality_insert = next(
+        statement
+        for statement in statements[1:]
+        if "INSERT INTO personality_types" in statement
+    )
+    assert (
+        "ON DUPLICATE KEY UPDATE description = VALUES(description)"
+        in personality_insert
+    )
     connection.commit.assert_called_once_with()
     connection.rollback.assert_not_called()
     cursor.close.assert_called_once_with()

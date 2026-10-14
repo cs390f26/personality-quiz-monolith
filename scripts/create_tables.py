@@ -26,7 +26,7 @@ CREATE TABLE IF NOT EXISTS questions (
 CREATE TABLE IF NOT EXISTS personality_types (
     personality_ID TINYINT PRIMARY KEY,
     personality_type VARCHAR(100) NOT NULL,
-    description VARCHAR(255) NOT NULL
+    description VARCHAR(2550) NOT NULL
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;
 
 CREATE TABLE IF NOT EXISTS answers (
@@ -135,6 +135,10 @@ def main() -> None:
             for statement in CREATE_TABLES_SQL.split(";"):
                 if statement.strip():
                     cursor.execute(statement)
+            cursor.execute(
+                "ALTER TABLE personality_types "
+                "MODIFY description VARCHAR(2550) NOT NULL"
+            )
             _migrate_legacy_ties(cursor)
 
         print("MySQL tables are ready.")

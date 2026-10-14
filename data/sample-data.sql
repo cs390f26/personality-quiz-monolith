@@ -2,13 +2,14 @@
 -- personality_types
 -- -----------------------------------------------------
 
-INSERT IGNORE INTO personality_types
+INSERT INTO personality_types
     (personality_ID, personality_type, description)
 VALUES
     (1, 'Orange', 'Orange personalities are action-oriented and spontaneous, driven by a strong need for freedom, variety, excitement, and momentum. They thrive in fast-paced environments, enjoy taking initiative, and are often happiest when they can adapt quickly, explore new opportunities, and make things happen without being restricted by rigid plans or routine.'),
     (2, 'Gold', 'Gold personalities are organized, dependable, and deeply value structure, stability, and clear expectations. They are dutiful, punctual, and goal-oriented, often preferring plans, routines, and traditional systems that help them follow through consistently. In both work and life, they tend to prepare ahead, respect authority, and prioritize responsibility over spontaneity. While this makes them reliable and effective in roles like project management, operations, accounting, administration, and law, they can become rigid or overly controlling when faced with sudden change or uncertainty.'),
     (3, 'Green', 'Green personalities are analytical, logical, and driven by a deep need for competence, independence, and intellectual freedom. They are curious, innovative, and often perfectionistic, seeking to understand the underlying systems behind complex problems and question assumptions before accepting them. These individuals value the ability to think deeply and solve challenges on their own, which makes them especially effective in engineering, technology, scientific research, medicine, and data analysis. However, under stress they may become detached, overly critical, or so focused on analysis that they struggle to act decisively.'),
-    (4, 'Blue', 'Blue personalities are relationship-oriented, empathetic, and deeply motivated by meaningful connections, harmony, and authentic human interaction. They are warm, compassionate, creative, and cooperative, often reading the room instinctively and caring deeply about how decisions affect the people around them. They thrive in environments where they can support others, build trust, and contribute to a shared purpose, making them well suited for teaching, counseling, human resources, nursing, and mission-driven nonprofit work. Under stress, however, they can become conflict-avoidant, overly sensitive, or take criticism too personally when they feel disconnected from others.');
+    (4, 'Blue', 'Blue personalities are relationship-oriented, empathetic, and deeply motivated by meaningful connections, harmony, and authentic human interaction. They are warm, compassionate, creative, and cooperative, often reading the room instinctively and caring deeply about how decisions affect the people around them. They thrive in environments where they can support others, build trust, and contribute to a shared purpose, making them well suited for teaching, counseling, human resources, nursing, and mission-driven nonprofit work. Under stress, however, they can become conflict-avoidant, overly sensitive, or take criticism too personally when they feel disconnected from others.')
+ON DUPLICATE KEY UPDATE description = VALUES(description);
 
 
 -- -----------------------------------------------------

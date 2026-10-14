@@ -765,6 +765,7 @@ main {
 	line-height: 1.7;
 	font-size: 1.04rem;
 	color: #333333;
+	overflow-wrap: anywhere;
 }
 
 .result-actions {
