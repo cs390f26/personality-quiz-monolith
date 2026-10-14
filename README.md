@@ -1,4 +1,5 @@
 # Personality Quiz
+![Testing](https://github.com/cs390f26/personality-quiz-monolith/actions/workflows/testpytest.yml/badge.svg)
 
 This is the monolithic implementation of the Personality Quiz application. It provides a Flask web interface and HTTP API backed by MySQL.
 
