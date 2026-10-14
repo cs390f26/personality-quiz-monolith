@@ -43,9 +43,11 @@
             <a class="start-button" href="{{ url_for('quiz_page') }}">Start Quiz</a>
         </section>
 
-        <section class="history-card" aria-label="Quiz history reel">
-            <h2>Quiz Activity</h2>
+        <section class="history-card" aria-labelledby="attempt-history-heading">
+            <h2 id="attempt-history-heading">Past Quiz Attempts</h2>
             <p class="history-note" aria-live="polite">Loading quiz activity...</p>
+            <p class="attempt-history-message" role="status">Loading past attempts...</p>
+            <ul class="attempt-history-list"></ul>
         </section>
     </main>
 
@@ -55,6 +57,8 @@
 
     <script>
         const activityNote = document.querySelector(".history-note");
+        const attemptHistoryMessage = document.querySelector(".attempt-history-message");
+        const attemptHistoryList = document.querySelector(".attempt-history-list");
 
         async function getJson(url) {
             const response = await fetch(url);
@@ -71,6 +75,49 @@
             return data;
         }
 
+        function renderAttempts(data) {
+            if (!data || !Array.isArray(data.results)) {
+                throw new Error("The server returned invalid quiz attempt history.");
+            }
+
+            if (data.results.length === 0) {
+                attemptHistoryMessage.textContent = "No completed quiz attempts yet.";
+                return;
+            }
+
+            const items = document.createDocumentFragment();
+            for (const result of data.results) {
+                if (
+                    !Number.isInteger(result.resultId) ||
+                    result.resultId < 1 ||
+                    typeof result.personName !== "string" ||
+                    typeof result.completedDate !== "string" ||
+                    !Array.isArray(result.personalities) ||
+                    result.personalities.some((personality) =>
+                        typeof personality !== "string"
+                    )
+                ) {
+                    throw new Error("The server returned invalid quiz attempt history.");
+                }
+
+                const item = document.createElement("li");
+                item.className = "attempt-history-item";
+                const details = document.createElement("span");
+                details.className = "attempt-history-details";
+                details.textContent =
+                    `${result.personName} — ${result.personalities.join(" / ")} · ${result.completedDate}`;
+                const link = document.createElement("a");
+                link.className = "attempt-result-link";
+                link.href = `/results?resultId=${encodeURIComponent(result.resultId)}`;
+                link.textContent = "View Results";
+                item.append(details, link);
+                items.append(item);
+            }
+
+            attemptHistoryList.replaceChildren(items);
+            attemptHistoryMessage.hidden = true;
+        }
+
         getJson("/statistics")
             .then((data) => {
                 if (!Number.isInteger(data.totalCompleted) || data.totalCompleted < 0) {
@@ -83,6 +130,14 @@
                 activityNote.textContent = error instanceof Error
                     ? `Quiz activity could not be loaded: ${error.message}`
                     : "Quiz activity could not be loaded. Please try again later.";
+            });
+
+        getJson("/quiz-results")
+            .then(renderAttempts)
+            .catch((error) => {
+                attemptHistoryMessage.textContent = error instanceof Error
+                    ? `Past attempts could not be loaded: ${error.message}`
+                    : "Past attempts could not be loaded.";
             });
     </script>
 </body>
